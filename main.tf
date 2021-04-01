@@ -1,25 +1,3 @@
-# create service principal, role and authentication-secret the short way
-#   az ad sp create-for-rbac \
-#  --role="Contributor" \
-#  --scopes="/subscriptions/SUBSCRIPTION_ID"
-#
-# terraform output azure-ssh-terraform.pem > ../keys/ssh/azure-ssh-terraform.pem
-#
-# az aks get-credentials --resource-group $(terraform output -raw resource_group_name) --name $(terraform output -raw kubernetes_cluster_name)
-#
-# kubectl get pods --all-namespaces
-#
-# dashboard
-# cluster-role-binding for k8s-dashboard
-# kubectl create clusterrolebinding kubernetes-dashboard --clusterrole=cluster-admin --serviceaccount=kube-system:kubernetes-dashboard --user=clusterUser
-
-# access k8s-dashboard through az (after that you may access http://127.0.0.1:8001/)
-# az aks browse --resource-group $(terraform output -raw resource_group_name) --name $(terraform output -raw kubernetes_cluster_name)
-
-# create token in a new terminal-tab (dont interrupt "az aks browse"-process )
-# kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep service-controller-token | awk '{print $1}')
-# copy + paste the token to the dashboard
-
 terraform {
   required_providers {
     azurerm = {
@@ -45,7 +23,7 @@ provider "azuread" {}
 variable "resource_prefix" {
   type        = string
   description = "(Required) Prefix given to all resources within the module."
-  default     = "K8s"
+  default     = "k8s"
 }
 
 variable "region" {
@@ -56,15 +34,46 @@ variable "region" {
 
 variable "kubernetes_version" {
   type        = string
-  default     = "1.19.3"
+  default     = "1.19.6"
   description = "Version of Kubernetes specified when creating the AKS managed cluster. If not specified, the latest recommended version will be used at provisioning time (but won't auto-upgrade)."
+}
+
+variable "max_pods_per_node" {
+  type        = number
+  default     = 100
+  description = "Specifies the number of max pods per node (if increase: pay attention to the number of free ip-addresses in the given subnet)"
+}
+
+output "ssh_private_key_pem" {
+  value = tls_private_key.ssh.private_key_pem
 }
 
 # output "kube_config" {
 #   value = azurerm_kubernetes_cluster.cluster.kube_config_raw
 # }
 
+# Resource Group
 resource "azurerm_resource_group" "aks_res_grp" {
   name     = "${var.resource_prefix}-rg"
   location = var.region
+}
+
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "azurerm_ssh_public_key" "example" {
+  name                = "ssh-terraform"
+  resource_group_name = azurerm_resource_group.aks_res_grp.name
+  location            = azurerm_resource_group.aks_res_grp.location
+  public_key          = tls_private_key.ssh.public_key_openssh
+}
+
+# Networking
+resource "azurerm_virtual_network" "aks_vnet" {
+  name                = "${var.resource_prefix}-vnet"
+  location            = azurerm_resource_group.aks_res_grp.location
+  resource_group_name = azurerm_resource_group.aks_res_grp.name
+  address_space       = ["10.0.0.0/16"]
 }

@@ -1,0 +1,17 @@
+error-snippet:
+
+azurerm_kubernetes_cluster.aks-cluster: Creating...                                                                                                                                                                                           
+                                                                                                                                                                                                                                              
+Error: rpc error: code = Unavailable desc = transport is closing                                                                                                                                                                              
+                                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                              
+Error: rpc error: code = Unavailable desc = transport is closing                                                                                                                                                                              
+                                                                                                                                                                                                                                              
+                                                                                                                                                                                                                                              
+panic: interface conversion: interface {} is nil, not map[string]interface {}                                                                                                                                                                 
+2021-02-14T00:41:51.498+0100 [DEBUG] plugin.terraform-provider-azurerm_v2.42.0_x5:                                                                                                                                                            
+2021-02-14T00:41:51.498+0100 [DEBUG] plugin.terraform-provider-azurerm_v2.42.0_x5: goroutine 339 [running]:                                                                                                                                   
+2021-02-14T00:41:51.498+0100 [DEBUG] plugin.terraform-provider-azurerm_v2.42.0_x5: github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/containers.expandKubernetesAddOnProfiles(0xc000e72af0, 0x1, 0x1, 0x5197
+1e3, 0x10, 0x51cea96, 0x20, 0x52051ee, 0x35, 0x51db0fe, ...)
+
